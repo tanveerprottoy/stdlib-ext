@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tanveerprottoy/stdlib-ext/internal/file"
 	"github.com/tanveerprottoy/stdlib-ext/internal/mimetype"
 )
 
