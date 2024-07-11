@@ -3,6 +3,8 @@ package stringsext
 import (
 	"unicode"
 	"unicode/utf8"
+
+	"math/rand"
 )
 
 func Substring(value string, start int, end int) string {
@@ -24,9 +26,18 @@ func ToLowerFirstChar(s string) string {
 	if r == utf8.RuneError && size <= 1 {
 		return s
 	}
-	lc := unicode.ToLower(r)
-	if r == lc {
+	l := unicode.ToLower(r)
+	if r == l {
 		return s
 	}
-	return string(lc) + s[size:]
+	return string(l) + s[size:]
+}
+
+// Rand returns a random string of length l from a given set of runes src
+func Rand(src []rune, l int) string {
+	b := make([]rune, l)
+	for i := range b {
+		b[i] = src[rand.Intn(len(src))]
+	}
+	return string(b)
 }

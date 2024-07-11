@@ -16,19 +16,10 @@ func Filter[T any](s []T, fn func(T) bool) (res []T) {
 	return res
 }
 
-func FindStr(s []string, target string) string {
+func Find(s []any, target any) any {
 	for _, e := range s {
 		if e == target {
 			return e
-		}
-	}
-	return ""
-}
-
-func FindAny(s []any, target any) any {
-	for _, e := range s {
-		if e == target {
-			return &e
 		}
 	}
 	return nil

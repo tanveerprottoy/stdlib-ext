@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"errors"
 	"io"
 	"mime"
@@ -9,6 +10,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tanveerprottoy/stdlib-ext/internal/file"
+	"github.com/tanveerprottoy/stdlib-ext/internal/mimetype"
 )
 
 // FilePathWalkDir walks the file path and returns the files
@@ -65,23 +69,27 @@ func CreateDirIfNotExists(path string) error {
 	}
 }
 
-// ReadFile reads a file from the root directory
-func ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
-}
-
 // SaveFile saves a file to the root directory
-func SaveFile(multipartFile multipart.File, rootDir string, fileName string) (string, error) {
-	path := filepath.Join(".", rootDir)
-	_ = os.MkdirAll(path, os.ModePerm)
+// an optional writer can be passed, which
+// will be used to pass as io.TeeReader(file, writer)
+func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fileName string, writer io.Writer) (string, error) {
+	err := os.MkdirAll(filepath.Join("./", path), os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 	fullPath := path + "/" + fileName
 	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
-	// Copy the file to the destination path
-	_, err = io.Copy(file, multipartFile)
+	if writer != nil {
+		// Copy the file to the destination path
+		_, err = io.Copy(file, io.TeeReader(file, writer))
+	} else {
+		// Copy the file to the destination path
+		_, err = io.Copy(file, multipartFile)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -89,18 +97,52 @@ func SaveFile(multipartFile multipart.File, rootDir string, fileName string) (st
 }
 
 // GetFileContentType returns the content type of the file
-func GetFileContentType(file *os.File) (string, error) {
+func GetFileContentType(file *os.File, seekToStart bool) (string, error) {
 	// to sniff the content type only the first
 	// 512 bytes are used.
-	buf := make([]byte, 512)
+	buff := make([]byte, 512)
 
-	_, err := file.Read(buf)
+	_, err := file.Read(buff)
 
 	if err != nil {
 		return "", err
 	}
 
-	contentType := http.DetectContentType(buf)
+	contentType := http.DetectContentType(buff)
+
+	if seekToStart {
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			// return contentType alongside error
+			// as it is expected to be detected
+			return contentType, err
+		}
+	}
+
+	return contentType, nil
+}
+
+func GetMultipartFileContentType(file multipart.File, seekToStart bool) (string, error) {
+	// to sniff the content type only the first
+	// 512 bytes are used.
+	buff := make([]byte, 512)
+
+	_, err := file.Read(buff)
+
+	if err != nil {
+		return "", err
+	}
+
+	contentType := http.DetectContentType(buff)
+
+	if seekToStart {
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			// return contentType alongside error
+			// as it is expected to be detected
+			return contentType, err
+		}
+	}
 
 	return contentType, nil
 }
@@ -117,8 +159,7 @@ func GetMIMEType(fileName string) string {
 }
 
 // IsAllowedMIMEType checks if the file is of an allowed mime type
-func IsAllowedMIMEType(fileName string, allowedMimeTypes []string) bool {
-	mimeType := GetMIMEType(fileName)
+func IsAllowedMIMEType(mimeType string, allowedMimeTypes []string) bool {
 	for _, allowedType := range allowedMimeTypes {
 		if strings.HasPrefix(mimeType, allowedType) {
 			return true
@@ -127,30 +168,15 @@ func IsAllowedMIMEType(fileName string, allowedMimeTypes []string) bool {
 	return false
 }
 
-// IsAudioMIMEType checks if the file is an audio file
-func IsAudioMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "audio/")
-}
-
-// IsImageMIMEType checks if the file is an image file
-func IsImageMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "image/")
-}
-
-// IsVideoMIMEType checks if the file is a video file
-func IsVideoMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "video/")
-}
-
 // IsTargetMIMEType checks if the file is of the target mime type
 func IsTargetMIMEType(fileName string, targetMimeType string) bool {
 	ext := filepath.Ext(fileName)
 	mimeType := mime.TypeByExtension(ext)
 	return strings.HasPrefix(mimeType, targetMimeType)
+}
+
+func IsMatchingMIMEType(fileName string) bool {
+	ext := filepath.Ext(fileName)
+	m := mime.TypeByExtension(ext)
+	return mimetype.IsMatchingMIMEType(m)
 }
