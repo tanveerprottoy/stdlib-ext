@@ -1,4 +1,4 @@
-package testext
+package testingext
 
 import "testing"
 

@@ -1,6 +1,10 @@
-package mathext
+package mathext_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/tanveerprottoy/stdlib-ext/mathext"
+)
 
 func TestAdd(t *testing.T) {
 	tests := []struct {
@@ -16,7 +20,7 @@ func TestAdd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := Add(tt.val0, tt.val1)
+			actual := mathext.Add(tt.val0, tt.val1)
 			if actual != tt.exp {
 				t.Errorf("Add(%d, %d) = %v; want %v", tt.val0, tt.val1, actual, tt.exp)
 			}
@@ -38,7 +42,7 @@ func TestPercentage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := Percentage(tt.num, tt.denom)
+			actual := mathext.Percentage(tt.num, tt.denom)
 			if actual != tt.exp {
 				t.Errorf("Percentage(%d, %d) = %v; want %v", tt.num, tt.denom, actual, tt.exp)
 			}
