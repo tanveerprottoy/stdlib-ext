@@ -8,6 +8,9 @@ import (
 )
 
 func TestAdd(t *testing.T) {
+	// run parallelly
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		val0 int
@@ -30,6 +33,9 @@ func TestAdd(t *testing.T) {
 }
 
 func TestSubtract(t *testing.T) {
+	// run parallelly
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		val0 int
@@ -53,6 +59,9 @@ func TestSubtract(t *testing.T) {
 }
 
 func TestPercentage(t *testing.T) {
+	// run parallelly
+	t.Parallel()
+
 	tests := []struct {
 		name  string
 		num   int64
@@ -76,6 +85,9 @@ func TestPercentage(t *testing.T) {
 }
 
 func TestFactorial(t *testing.T) {
+	// run parallelly
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		in   int
@@ -97,21 +109,85 @@ func TestFactorial(t *testing.T) {
 	}
 }
 
-// benchmarks
+// bencmarks
+// any benchmark should be careful to avoid compiler optimisations eliminating the
+// function under test and artificially lowering the run time of the benchmark.
+const max = 100
+
+var result int
+
 func BenchmarkAdd(b *testing.B) {
-	for i := range b.N {
-		_ = mathext.Add(rand.Intn(i), rand.Intn(i+2))
+	var r int
+
+	// good practise not to use values from b.N
+	for range b.N {
+		r = mathext.Add(rand.Intn(max), rand.Intn(max))
 	}
+
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	result = r
 }
 
 func BenchmarkSubtract(b *testing.B) {
-	for i := range b.N {
-		_ = mathext.Subract(rand.Intn(i), rand.Intn(i+2))
+	var r int
+
+	// good practise not to use values from b.N
+	for range b.N {
+		r = mathext.Subract(rand.Intn(max), rand.Intn(max))
 	}
+
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	result = r
 }
 
 func BenchmarkFactorial(b *testing.B) {
-	for i := range b.N {
-		_ = mathext.Factorial(rand.Intn(i))
+	var r int
+
+	// good practise not to use values from b.N
+	for range b.N {
+		r = mathext.Factorial(rand.Intn(max))
 	}
+
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	result = r
+}
+
+func benchmarkFactorial(i int, b *testing.B) {
+	var r int
+
+	// run the factorial function
+	for range b.N {
+		r = mathext.Factorial(i)
+	}
+
+	// always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	result = r
+}
+
+func BenchmarkFactorial5(b *testing.B) {
+	benchmarkFactorial(5, b)
+}
+
+func BenchmarkFactorial10(b *testing.B) {
+	benchmarkFactorial(10, b)
+}
+
+func BenchmarkFactorial15(b *testing.B) {
+	benchmarkFactorial(15, b)
+}
+
+func BenchmarkFactorial24(b *testing.B) {
+	benchmarkFactorial(24, b)
+}
+
+func BenchmarkAll(b *testing.B) {
+	b.Run("Add", BenchmarkAdd)
+
+	b.Run("Subtract", BenchmarkSubtract)
+
+	b.Run("Factorial", BenchmarkFactorial)
 }

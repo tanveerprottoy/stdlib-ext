@@ -5,3 +5,12 @@ Install
 ```
 go get github.com/tanveerprottoy/stdlib-ext
 ```
+
+## testing
+unit test:
+go test ./...
+
+go test -v ./<pathToPackage>
+
+benchmark:
+go test ./<pathToPackage> -bench=. -benchmem
