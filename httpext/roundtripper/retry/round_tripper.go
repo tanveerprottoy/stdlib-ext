@@ -87,7 +87,7 @@ func (r *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Println("RoundTripper: RoundTrip called")
 
 	var (
-		attempts int
+		attempts = 0
 		resp     *http.Response
 		err      error
 	)

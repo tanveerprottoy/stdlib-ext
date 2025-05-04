@@ -80,9 +80,6 @@ func NewCustomClient(cfg Config, opts ...Option) *customClient {
 			MaxIdleConnsPerHost: c.maxIdleConnsPerHost,
 			IdleConnTimeout:     c.idleConnTimeout,
 		}
-
-		// or we could use the custom Roundtripper, which is not necessary
-		// NewRoundTripper(opts.MaxIdleConnsPerHost, opts.IdleConnTimeout)
 	}
 
 	return c
@@ -143,7 +140,7 @@ func (c *customClient) drainBody(resp *http.Response) {
 
 func (c *customClient) doWithRetry(req *http.Request) (*http.Response, error) {
 	var (
-		attempts int
+		attempts = 0
 		resp     *http.Response
 		err      error
 	)
