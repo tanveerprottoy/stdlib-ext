@@ -15,13 +15,4 @@ type Requester[R, E any] interface {
 		body io.Reader,
 		retry bool,
 	) (*R, *E, error)
-
-	RequestRaw(
-		ctx context.Context,
-		method string,
-		url string,
-		header http.Header,
-		body io.Reader,
-		retry bool,
-	) (int, []byte, error)
 }

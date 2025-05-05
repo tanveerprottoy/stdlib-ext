@@ -91,34 +91,3 @@ func (s *service[R, E]) Request(
 		return nil, &e, errors.New("error response was returned")
 	}
 }
-
-// RequestRaw is a function to make a request with context
-// it returns the status code and the response body as a byte slice
-// use this function when need to get the raw response body
-func (s *service[R, E]) RequestRaw(
-	ctx context.Context,
-	method string,
-	url string,
-	header http.Header,
-	body io.Reader,
-	retry bool,
-) (int, []byte, error) {
-	req, err := s.buildRequest(ctx, method, url, header, body)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	resp, err := s.client.Do(req, retry)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	defer resp.Body.Close()
-
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	return resp.StatusCode, b, nil
-}
